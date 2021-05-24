@@ -11,9 +11,7 @@ uta-stream
 coverage.txt
 
 # Stuff used for testing, these will be generated on running tests
-test_song.mp3
-**/TEMP-DL
-*.db
+build/
 debug
 __debug_bin
 
