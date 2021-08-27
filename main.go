@@ -20,6 +20,7 @@ var templatePrefix = flag.String("tprefix", "t_", "prefix for template files")
 var outDir = flag.String("out", "./build/", "Where to search for files and templates")
 
 var templates *template.Template
+var watcher *fsnotify.Watcher
 var absRootPath string
 
 func applyTemplate(currentPath string, d os.DirEntry, err error) error {
@@ -38,6 +39,18 @@ func applyTemplate(currentPath string, d os.DirEntry, err error) error {
 	// If we're looking at a dir just make the path
 	os.MkdirAll(filepath.Dir(outPath), os.FileMode(os.O_RDWR))
 	if d.IsDir() {
+		templates, err = templates.ParseGlob(filepath.Join(currentPath, "*.html"))
+		if err != nil {
+			return fmt.Errorf("failed to add subdir templates: %v", err)
+		}
+
+		if watcher != nil {
+			watcher.Add(currentPath)
+			if err != nil {
+				return fmt.Errorf("failed to set watch on subdir: %v", err)
+			}
+		}
+
 		return nil
 	}
 
@@ -88,7 +101,7 @@ func main() {
 	}
 
 	if *watch {
-		watcher, err := fsnotify.NewWatcher()
+		watcher, err = fsnotify.NewWatcher()
 		if err != nil {
 			log.Fatalf("Failed to make watcher: %v", err)
 		}
